@@ -2,7 +2,6 @@
 
 package com.mrakramov.notesapp.feature.presentation.notes
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,12 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
@@ -40,8 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -76,7 +71,11 @@ fun NotesScreen(
 
     Scaffold(modifier = Modifier.fillMaxSize(),
         containerColor = background,
-        topBar = { TopBarWithSearch() }) { paddingValues ->
+        topBar = {
+            TopBarWithSearch(state.value) {
+                notesViewModel.updateSearch(it)
+            }
+        }) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
@@ -213,7 +212,7 @@ fun EditNotes(value: NotesScreenState, onEditClick: () -> Unit) {
 }
 
 @Composable
-fun TopBarWithSearch() {
+fun TopBarWithSearch(value: NotesScreenState, onSearch: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -235,13 +234,15 @@ fun TopBarWithSearch() {
             }
         }
 
-        SearBar()
+        SearchBar(value) {
+            onSearch(it)
+        }
     }
 
 }
 
 @Composable
-fun SearBar() {
+fun SearchBar(value: NotesScreenState, onSearch: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -262,9 +263,9 @@ fun SearBar() {
             Spacer(Modifier.size(10.dp))
             BasicTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = "Search",
+                value = value.search,
                 onValueChange = {
-
+                    onSearch(it)
                 },
                 textStyle = TextStyle(color = Color(0xff8B8C8E), fontSize = 14.sp),
                 singleLine = true,

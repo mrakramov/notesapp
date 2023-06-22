@@ -10,6 +10,7 @@ class NoteRepoImp(
 ) : NoteRepository {
 
     override fun loadNotes(): Flow<List<Note>> = dao.loadNotes()
+    override suspend fun searchNotes(text: String): List<Note> = dao.searchNotes(text)
 
     override suspend fun loadNoteById(id: Int): Note = dao.loadNoteById(id)
 

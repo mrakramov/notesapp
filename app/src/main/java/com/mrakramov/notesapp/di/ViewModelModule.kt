@@ -9,6 +9,7 @@ import com.mrakramov.notesapp.feature.domain.usecase.DeleteNote
 import com.mrakramov.notesapp.feature.domain.usecase.LoadNoteById
 import com.mrakramov.notesapp.feature.domain.usecase.LoadNotes
 import com.mrakramov.notesapp.feature.domain.usecase.NoteUseCase
+import com.mrakramov.notesapp.feature.domain.usecase.SearchNotes
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,7 +39,8 @@ object ViewModelModule {
             addNote = AddNote(repository),
             deleteNote = DeleteNote(repository),
             loadNoteById = LoadNoteById(repository),
-            loadNotes = LoadNotes(repository, mapper)
+            loadNotes = LoadNotes(repository, mapper),
+            searchNote = SearchNotes(repository, mapper)
         )
     }
 }
