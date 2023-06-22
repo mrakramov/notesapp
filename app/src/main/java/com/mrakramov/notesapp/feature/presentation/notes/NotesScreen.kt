@@ -226,12 +226,12 @@ fun TopBarWithSearch(value: NotesScreenState, onSearch: (String) -> Unit) {
             Text(
                 text = "Notes", color = Color.Black, fontSize = 30.sp, fontWeight = FontWeight.Bold
             )
-            IconButton(onClick = { }) {
-                Icon(
-                    imageVector = Icons.Outlined.FilterList, contentDescription = null,
-                    tint = Color(0xFFE0A404),
-                )
-            }
+//            IconButton(onClick = { }) {
+//                Icon(
+//                    imageVector = Icons.Outlined.FilterList, contentDescription = null,
+//                    tint = Color(0xFFE0A404),
+//                )
+//            }
         }
 
         SearchBar(value) {
