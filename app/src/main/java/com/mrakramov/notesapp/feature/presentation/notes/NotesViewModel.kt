@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mrakramov.notesapp.feature.domain.model.Note
+import com.mrakramov.notesapp.feature.domain.model.NoteEntity
 import com.mrakramov.notesapp.feature.domain.usecase.NoteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -33,18 +34,24 @@ class NotesViewModel @Inject constructor(private val useCase: NoteUseCase) : Vie
     }
 
     private fun loadNotes() {
-        useCase.loadNotes()
-            .flowOn(IO)
-            .onStart {
-                _uiState.update { it.copy(loading = true) }
-            }.onEach { notes ->
-                _uiState.update { it.copy(loading = false, notes = notes) }
+        useCase.loadNotes.invoke().flowOn(IO).onStart {
+            _uiState.update {
+                it.copy(
+                    loading = true, notesCount = "Notes"
+                )
             }
-            .catch {
-                _uiState.update { it.copy(loading = false) }
-                _events.send(NotesScreenEvents.Error(it.message.toString()))
+        }.onEach { notes ->
+            val count = if (notes.isNotEmpty()) "${notes.size} Notes" else "No Notes"
+
+            _uiState.update {
+                it.copy(
+                    loading = false, notes = notes, notesCount = count
+                )
             }
-            .launchIn(viewModelScope)
+        }.catch {
+            _uiState.update { it.copy(loading = false) }
+            _events.send(NotesScreenEvents.Error(it.message.toString()))
+        }.launchIn(viewModelScope)
     }
 }
 
@@ -54,6 +61,5 @@ sealed class NotesScreenEvents {
 
 @Stable
 data class NotesScreenState(
-    val loading: Boolean = false,
-    val notes: List<Note> = emptyList()
+    val loading: Boolean = false, val notes: List<NoteEntity> = emptyList(), val notesCount: String = ""
 )

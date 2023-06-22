@@ -1,14 +1,17 @@
 package com.mrakramov.notesapp.di
 
 import android.app.Application
+import android.content.Context
 import androidx.room.Room
 import com.mrakramov.notesapp.feature.data.db.NoteDB
+import com.mrakramov.notesapp.feature.data.db.getDB
 import com.mrakramov.notesapp.feature.data.repository.NoteRepoImp
 import com.mrakramov.notesapp.feature.domain.repo.NoteRepository
 import com.mrakramov.notesapp.feature.domain.usecase.NoteUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -18,24 +21,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNoteDatabase(app: Application): NoteDB {
-        return Room.databaseBuilder(
-            app,
-            NoteDB::class.java,
-            NoteDB.DATABASE_NAME
-        ).build()
+    fun provideNoteDatabase(@ApplicationContext context: Context): NoteDB {
+        return getDB(context)
     }
-
-    @Provides
-    @Singleton
-    fun provideNoteRepository(db: NoteDB): NoteRepository {
-        return NoteRepoImp(db.dao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideNoteUseCases(repository: NoteRepository): NoteUseCase {
-        return NoteUseCase(repository)
-    }
-
 }
