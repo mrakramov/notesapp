@@ -44,7 +44,9 @@ import com.ramcosta.composedestinations.annotation.Destination
 @Composable
 @Destination
 fun EditNoteScreen(
-    navController: NavController, viewModel: EditNoteViewModel = hiltViewModel()
+    id: Int = -1,
+    navController: NavController,
+    viewModel: EditNoteViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val state = viewModel.uiState.collectAsStateWithLifecycle()

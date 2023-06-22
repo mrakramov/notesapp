@@ -15,5 +15,5 @@ class NoteRepoImp(
 
     override suspend fun insertNote(note: Note) = dao.insertNote(note)
 
-    override suspend fun deleteNote(note: Note) = dao.deleteNote(note)
+    override suspend fun deleteNote(id: Int) = dao.deleteNote(id)
 }

@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalMaterialApi::class)
+
 package com.mrakramov.notesapp.feature.presentation.notes
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +19,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
@@ -34,6 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +53,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.mrakramov.notesapp.R
-import com.mrakramov.notesapp.feature.domain.model.Note
 import com.mrakramov.notesapp.feature.domain.model.NoteEntity
 import com.mrakramov.notesapp.feature.presentation.destinations.EditNoteScreenDestination
 import com.mrakramov.notesapp.navigation.NavGraph
@@ -54,7 +61,8 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
-import java.text.SimpleDateFormat
+import de.charlex.compose.RevealDirection
+import de.charlex.compose.RevealSwipe
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,11 +82,13 @@ fun NotesScreen(
                 .padding(paddingValues)
                 .padding(15.dp)
         ) {
-            ListNotesView(state.value){
-                navController.navigate(EditNoteScreenDestination within NavGraph.root)
-            }
+            ListNotesView(state.value, {
+                navController.navigate(EditNoteScreenDestination(it) within NavGraph.root)
+            }, { id ->
+                notesViewModel.deleteNote(id)
+            })
             EditNotes(state.value) {
-                navController.navigate(EditNoteScreenDestination within NavGraph.root)
+                navController.navigate(EditNoteScreenDestination() within NavGraph.root)
             }
         }
     }
@@ -86,8 +96,7 @@ fun NotesScreen(
 
 @Composable
 fun ColumnScope.ListNotesView(
-    value: NotesScreenState,
-    onItemClick: (id: Int) -> Unit
+    value: NotesScreenState, onItemClick: (id: Int) -> Unit, onDelete: (id: Int) -> Unit
 ) {
     LazyColumn(modifier = Modifier.weight(1f)) {
         var lastDate: String? = null
@@ -103,9 +112,9 @@ fun ColumnScope.ListNotesView(
                     )
                 }
             }
-            item {
-                NoteItemView(noteEntity, notes.lastIndex != index) {
-                    onItemClick(noteEntity.id)
+            item(key = noteEntity.id) {
+                NoteItemView(noteEntity, notes.lastIndex != index, { onItemClick(noteEntity.id) }) {
+                    onDelete(noteEntity.id)
                 }
             }
             lastDate = noteEntity.date
@@ -115,42 +124,58 @@ fun ColumnScope.ListNotesView(
 
 @Composable
 fun NoteItemView(
-    note: NoteEntity, showDivider: Boolean,
-    onItemClick: () -> Unit
+    note: NoteEntity, showDivider: Boolean, onItemClick: () -> Unit, onDelete: () -> Unit
 ) {
-    Card(
+
+    RevealSwipe(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(size = 0.dp)
+        directions = setOf(RevealDirection.EndToStart),
+        hiddenContentEnd = {
+            Icon(
+                modifier = Modifier.padding(horizontal = 25.dp),
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = null,
+                tint = Color.White
+            )
+        },
+        onBackgroundEndClick = onDelete,
+        backgroundCardEndColor = Color.Red,
     ) {
-        Column(
-            modifier = Modifier
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(size = 0.dp)
+        ) {
+            Column(modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onItemClick() }
-                .padding(horizontal = 15.dp, vertical = 6.dp)
-        ) {
-            Text(text = note.title, fontWeight = FontWeight.SemiBold)
-            Row(
-                modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = note.time, maxLines = 1, overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.width(5.dp))
-                Text(
-                    text = note.content, maxLines = 1, overflow = TextOverflow.Ellipsis
-                )
-            }
-            Spacer(modifier = Modifier.size(8.dp))
-            if (showDivider) {
-                Divider(
+                .padding(horizontal = 15.dp, vertical = 6.dp)) {
+                Text(text = note.title, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.size(3.dp))
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    thickness = 0.5.dp,
-                    color = Color(0xFFD2D2D2)
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = note.time, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = note.content, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Spacer(modifier = Modifier.size(8.dp))
+                if (showDivider) {
+                    Divider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 0.5.dp,
+                        color = Color(0xFFD2D2D2)
+                    )
+                }
             }
         }
     }
+
 }
 
 @Composable

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.mrakramov.notesapp.feature.domain.model.Note
 import com.mrakramov.notesapp.feature.domain.model.NoteEntity
 import com.mrakramov.notesapp.feature.domain.usecase.NoteUseCase
+import com.mrakramov.notesapp.utils.resultOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers.IO
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class NotesViewModel @Inject constructor(private val useCase: NoteUseCase) : ViewModel() {
@@ -53,6 +55,14 @@ class NotesViewModel @Inject constructor(private val useCase: NoteUseCase) : Vie
             _events.send(NotesScreenEvents.Error(it.message.toString()))
         }.launchIn(viewModelScope)
     }
+
+    fun deleteNote(id: Int) {
+        viewModelScope.launch(IO) {
+            resultOf {
+                useCase.deleteNote.invoke(id)
+            }.onSuccess { }.onFailure { }
+        }
+    }
 }
 
 sealed class NotesScreenEvents {
@@ -61,5 +71,7 @@ sealed class NotesScreenEvents {
 
 @Stable
 data class NotesScreenState(
-    val loading: Boolean = false, val notes: List<NoteEntity> = emptyList(), val notesCount: String = ""
+    val loading: Boolean = false,
+    val notes: List<NoteEntity> = emptyList(),
+    val notesCount: String = ""
 )
